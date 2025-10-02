@@ -1,0 +1,213 @@
+# Server Configuration
+server:
+  port: 8087
+
+# Spring Application Configuration
+spring:
+  application:
+    name: notification-service
+
+  # PostgreSQL Database Configuration
+  datasource:
+    url: jdbc:postgresql://localhost:5437/bakery_notifications
+    username: notification_user
+    password: notification_password
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 300000
+      connection-timeout: 20000
+
+  # JPA Configuration
+  jpa:
+    hibernate:
+      ddl-auto: update
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+
+  # Mail Configuration (SMTP)
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:your-email@gmail.com}
+    password: ${MAIL_PASSWORD:your-app-password}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
+  # Thymeleaf Configuration
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+    mode: HTML
+    encoding: UTF-8
+    check-template-location: true
+    cache: false
+
+  # Cache Configuration
+  cache:
+    type: simple
+    cache-names: templates, users, settings
+
+  # Jackson Configuration
+  jackson:
+    default-property-inclusion: NON_NULL
+    serialization:
+      write-dates-as-timestamps: false
+
+  docker:
+    compose:
+      file: docker-compose-notifications-db.yml
+      enabled: false
+
+# Eureka Client Configuration
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
+
+# Feign Configuration
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000
+        loggerLevel: basic
+
+# Management & Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus, scheduledtasks
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+# ? AWS Configuration
+aws:
+  region: ${AWS_REGION:us-east-1}
+  access-key: ${AWS_ACCESS_KEY_ID:your-aws-access-key}
+  secret-key: ${AWS_SECRET_ACCESS_KEY:your-aws-secret-key}
+
+  # SNS Configuration
+  sns:
+    # Platform Application ARNs (one for each platform)
+#    ios-platform-arn: ${AWS_SNS_IOS_PLATFORM_ARN:arn:aws:sns:us-east-1:123456789:app/APNS/YourBakeryApp-iOS}
+    android-platform-arn: ${AWS_SNS_ANDROID_PLATFORM_ARN:arn:aws:sns:us-east-1:123456789:app/FCM/YourBakeryApp-Android}
+
+    # Topic ARNs for broadcasting
+    general-topic-arn: ${AWS_SNS_GENERAL_TOPIC_ARN:arn:aws:sns:us-east-1:123456789:bakery-general-notifications}
+    marketing-topic-arn: ${AWS_SNS_MARKETING_TOPIC_ARN:arn:aws:sns:us-east-1:123456789:bakery-marketing}
+    orders-topic-arn: ${AWS_SNS_ORDERS_TOPIC_ARN:arn:aws:sns:us-east-1:123456789:bakery-orders}
+
+# Notification Service Specific Configuration
+notification:
+  # Email settings
+  email:
+    from: ${NOTIFICATION_FROM_EMAIL:noreply@shahs-bakery.com}
+    from-name: "Shah's Bakery"
+    reply-to: ${NOTIFICATION_REPLY_TO:support@shahs-bakery.com}
+    enabled: true
+    retry-attempts: 3
+    retry-delay-minutes: 5
+
+  # SMS settings (Twilio)
+  sms:
+    account-sid: ${TWILIO_ACCOUNT_SID:your-twilio-sid}
+    auth-token: ${TWILIO_AUTH_TOKEN:your-twilio-token}
+    from-number: ${TWILIO_FROM_NUMBER:+1234567890}
+    enabled: ${SMS_ENABLED:false}
+    retry-attempts: 3
+    retry-delay-minutes: 2
+
+  # AWS SNS Push notification settings
+  push:
+    provider: "aws-sns"
+    enabled: ${PUSH_ENABLED:true}
+    retry-attempts: 3
+    retry-delay-minutes: 1
+
+    # Message settings
+    time-to-live: 3600  # 1 hour in seconds
+    collapse-key: "bakery-notification"
+
+    # Badge and sound settings
+    default-sound: "default"
+    badge-count: 1
+
+  # Template settings
+  templates:
+    cache-ttl-minutes: 60
+    reload-on-change: true
+
+  # Scheduling settings
+  scheduling:
+    enabled: true
+    abandoned-cart-delay-hours: 2
+    follow-up-delay-hours: 24
+    cleanup-days: 90
+
+  # Rate limiting
+  rate-limit:
+    email-per-minute: 100
+    sms-per-minute: 50
+    push-per-minute: 1000  # SNS can handle higher volumes
+
+# External Service URLs
+external-services:
+  user-service:
+    base-url: http://localhost:8082
+  order-service:
+    base-url: http://localhost:8084
+  cart-service:
+    base-url: http://localhost:8086
+
+# Logging Configuration
+logging:
+  level:
+    com.shah_s.bakery_notification_service: DEBUG
+    software.amazon.awssdk: INFO
+    org.springframework.web: DEBUG
+    org.springframework.mail: DEBUG
+    com.twilio: INFO
+    root: INFO
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{50} - %msg%n"
+  file:
+    name: logs/notification-service.log
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 30

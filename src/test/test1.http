@@ -1,0 +1,284 @@
+### 1. Test Email Service
+POST http://localhost:8087/api/admin/test/email?testEmail=testuser@example.com
+Authorization: Bearer <JWT_TOKEN>
+Content-Type: application/x-www-form-urlencoded
+
+// Expected Response (200 OK)
+{
+  "service": "email",
+  "connectivity": true,
+  "timestamp": "2025-10-02T13:00:00",
+  "testedBy": "admin-user-id",
+  "testEmail": "sent",
+  "testEmailAddress": "testuser@example.com",
+  "health": {
+    "enabled": true,
+    "fromEmail": "noreply@shahs-bakery.com",
+    "fromName": "Shah's Bakery",
+    "replyTo": "support@shahs-bakery.com",
+    "retryAttempts": 3,
+    "connectivity": true,
+    "timestamp": "2025-10-02T13:00:00"
+  }
+}
+
+### 2. Test SMS Service
+POST http://localhost:8087/api/admin/test/sms?testPhone=+1234567890
+Authorization: Bearer <JWT_TOKEN>
+Content-Type: application/x-www-form-urlencoded
+
+// Expected Response (200 OK)
+{
+  "service": "sms",
+  "connectivity": true,
+  "timestamp": "2025-10-02T13:00:00",
+  "testedBy": "admin-user-id",
+  "testSms": "sent",
+  "testPhoneNumber": "***7890",
+  "messageId": "SMXXXXXXXXXXXXXXXXXXXXXXX",
+  "health": {
+    "enabled": true,
+    "fromNumber": "+19876543210",
+    "accountSid": "AC****1234",
+    "retryAttempts": 3,
+    "connectivity": true,
+    "timestamp": "2025-10-02T13:00:00"
+  }
+}
+
+### 3. Test Push Notification Service
+POST http://localhost:8087/api/admin/test/push?testEndpointArn=arn:aws:sns:us-east-1:123456789:endpoint/APNS_SANDBOX/app/1234abcd
+Authorization: Bearer <JWT_TOKEN>
+Content-Type: application/x-www-form-urlencoded
+
+// Expected Response (200 OK)
+{
+  "service": "push",
+  "timestamp": "2025-10-02T13:00:00",
+  "testedBy": "admin-user-id",
+  "testPush": "sent",
+  "testEndpoint": "***1234abcd",
+  "health": {
+    "enabled": true,
+    "retryAttempts": 3,
+    "timeToLive": 3600,
+    "defaultSound": "default",
+    "badgeCount": 1,
+    "awsSnsConfigured": true,
+    "timestamp": "2025-10-02T13:00:00"
+  }
+}
+
+### 4. Send Test Notification (Email)
+POST http://localhost:8087/api/admin/test/notification?type=EMAIL&recipient=testuser@example.com&message=Hello+Test
+Authorization: Bearer <JWT_TOKEN>
+Content-Type: application/x-www-form-urlencoded
+
+// Expected Response (201 Created)
+{
+  "testType": "EMAIL",
+  "timestamp": "2025-10-02T13:05:00",
+  "sentBy": "admin-user-id",
+  "status": "sent",
+  "recipient": "testuser@example.com"
+}
+
+### 4. Send Test Notification (SMS)
+POST http://localhost:8087/api/admin/test/notification?type=SMS&recipient=+1234567890&message=Hello+Test
+Authorization: Bearer <JWT_TOKEN>
+Content-Type: application/x-www-form-urlencoded
+
+// Expected Response (201 Created)
+{
+  "testType": "SMS",
+  "timestamp": "2025-10-02T13:05:00",
+  "sentBy": "admin-user-id",
+  "status": "sent",
+  "recipient": "***7890",
+  "messageId": "SMXXXXXXXXXXXXXXXXXXXXXXX"
+}
+
+### 4. Send Test Notification (Push)
+POST http://localhost:8087/api/admin/test/notification?type=PUSH&recipient=arn:aws:sns:us-east-1:123456789:endpoint/APNS_SANDBOX/app/1234abcd
+Authorization: Bearer <JWT_TOKEN>
+Content-Type: application/x-www-form-urlencoded
+
+// Expected Response (201 Created)
+{
+  "testType": "PUSH",
+  "timestamp": "2025-10-02T13:05:00",
+  "sentBy": "admin-user-id",
+  "status": "sent",
+  "recipient": "***1234abcd"
+}
+
+### 5. Service Health Check
+GET http://localhost:8087/api/admin/health
+Authorization: Bearer <JWT_TOKEN>
+
+// Expected Response (200 OK)
+{
+  "system": {
+    "status": "UP",
+    "application": "shahs-bakery-notification-service",
+    "port": "8087",
+    "timestamp": "2025-10-02T13:10:00"
+  },
+  "services": {
+    "email": {
+      "enabled": true,
+      "connectivity": true,
+      "fromEmail": "noreply@shahs-bakery.com",
+      "retryAttempts": 3
+    },
+    "sms": {
+      "enabled": true,
+      "connectivity": true,
+      "fromNumber": "+19876543210",
+      "retryAttempts": 3
+    },
+    "push": {
+      "enabled": true,
+      "retryAttempts": 3,
+      "timeToLive": 3600
+    }
+  },
+  "overallStatus": "HEALTHY"
+}
+
+### 6. System Info
+GET http://localhost:8087/api/admin/info
+Authorization: Bearer <JWT_TOKEN>
+
+// Expected Response (200 OK)
+// Returns detailed system and runtime environment information
+{
+  "system": {
+    "application": "shahs-bakery-notification-service",
+    "version": "0.0.1-SNAPSHOT",
+    "javaVersion": "21",
+    "os": "Windows",
+    "timestamp": "2025-10-02T13:15:00"
+  },
+  "runtime": {
+    "uptime": "2 days, 4 hours",
+    "memory": {
+      "used": "256MB",
+      "free": "768MB",
+      "total": "1024MB"
+    }
+  }
+}
+
+### 7. System Maintenance
+POST http://localhost:8087/api/admin/maintenance
+Authorization: Bearer <JWT_TOKEN>
+Content-Type: application/x-www-form-urlencoded
+
+// Expected Response (200 OK)
+// Returns result of maintenance tasks (cleanup, validation)
+{
+  "maintenance": "completed",
+  "tasks": ["cleanup", "validation"],
+  "timestamp": "2025-10-02T13:16:00"
+}
+
+### 8. Force Garbage Collection
+POST http://localhost:8087/api/admin/gc
+Authorization: Bearer <JWT_TOKEN>
+Content-Type: application/x-www-form-urlencoded
+
+// Expected Response (200 OK)
+// Returns result of GC trigger
+{
+  "gc": "triggered",
+  "timestamp": "2025-10-02T13:17:00"
+}
+
+### 9. Change Log Level
+POST http://localhost:8087/api/admin/log-level
+Authorization: Bearer <JWT_TOKEN>
+Content-Type: application/x-www-form-urlencoded
+
+// Example Body
+level=DEBUG
+
+// Expected Response (200 OK)
+// Returns result of log level change
+{
+  "logLevel": "DEBUG",
+  "timestamp": "2025-10-02T13:18:00"
+}
+
+### 10. Retrieve Application Logs
+GET http://localhost:8087/api/admin/logs
+Authorization: Bearer <JWT_TOKEN>
+
+// Expected Response (200 OK)
+// Returns recent application logs
+{
+  "logs": [
+    "2025-10-02T13:00:00 INFO Email sent to testuser@example.com",
+    "2025-10-02T13:05:00 INFO SMS sent to +1234567890"
+  ],
+  "timestamp": "2025-10-02T13:19:00"
+}
+
+### 11. Export System Configuration
+GET http://localhost:8087/api/admin/export-config
+Authorization: Bearer <JWT_TOKEN>
+
+// Expected Response (200 OK)
+// Returns sanitized system configuration
+{
+  "config": {
+    "email": {
+      "fromEmail": "noreply@shahs-bakery.com",
+      "enabled": true
+    },
+    "sms": {
+      "fromNumber": "+19876543210",
+      "enabled": true
+    },
+    "push": {
+      "enabled": true,
+      "timeToLive": 3600
+    }
+  },
+  "timestamp": "2025-10-02T13:20:00"
+}
+
+// Example Usage Summaries
+// Test Email API:
+// POST /api/admin/test/email?testEmail=user@example.com
+// Authorization: Bearer <token>
+// Test SMS API:
+// POST /api/admin/test/sms?testPhone=+1234567890
+// Authorization: Bearer <token>
+// Test Push API:
+// POST /api/admin/test/push?testEndpointArn=arn:aws:sns:us-east-1:xxxxxx:endpoint/APNS_SANDBOX/YourApp/yourDeviceToken
+// Authorization: Bearer <token>
+// Send Test Notification API:
+// POST /api/admin/test/notification?type=EMAIL&recipient=user@example.com
+// Authorization: Bearer <token>
+// Content-Type: application/json
+// Body: { "message": "Hello from Shah's Bakery Notification Service!" }
+// System Info:
+// GET /api/admin/info
+// Authorization: Bearer <token>
+// System Maintenance:
+// POST /api/admin/maintenance
+// Authorization: Bearer <token>
+// Force GC:
+// POST /api/admin/gc
+// Authorization: Bearer <token>
+// Change Log Level:
+// POST /api/admin/log-level
+// Authorization: Bearer <token>
+// Body: level=DEBUG
+// Retrieve Logs:
+// GET /api/admin/logs
+// Authorization: Bearer <token>
+// Export Config:
+// GET /api/admin/export-config
+// Authorization: Bearer <token>

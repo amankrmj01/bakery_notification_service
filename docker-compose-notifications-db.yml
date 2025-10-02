@@ -1,0 +1,25 @@
+services:
+  postgres-notifications:
+    image: postgres:15-alpine
+    container_name: bakery-notifications-db
+    restart: unless-stopped
+    ports:
+      - "5437:5432"  # Different port for notification service
+    environment:
+      POSTGRES_DB: bakery_notifications
+      POSTGRES_USER: notification_user
+      POSTGRES_PASSWORD: notification_password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+    volumes:
+      - postgres_notifications_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - bakery-network
+
+volumes:
+  postgres_notifications_data:
+    driver: local
+
+networks:
+  bakery-network:
+    driver: bridge
